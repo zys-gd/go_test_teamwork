@@ -22,7 +22,7 @@ func (e email) String() string {
 	return string(e)
 }
 
-func (e email) validate() bool {
+func (e email) isValid() bool {
 	regex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	match, err := regexp.MatchString(regex, e.String())
 	if err != nil {
@@ -34,7 +34,7 @@ func (e email) validate() bool {
 
 func (e email) domain() string {
 	parts := strings.Split(e.String(), "@")
-	if e.validate() {
+	if e.isValid() {
 		return parts[1]
 	}
 
@@ -57,7 +57,11 @@ func main() {
 
 	reader := csv.NewReader(file)
 	domainCounts := make(map[string]int)
-	rowNum := 0
+
+	_, err = reader.Read()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for {
 		record, err := reader.Read()
@@ -67,15 +71,8 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		if rowNum == 0 {
-			rowNum++
-			continue
-		}
 
-		email := email(record[2])
-		d := email.domain()
-
-		domainCounts[d]++
+		domainCounts[email(record[2]).domain()]++
 	}
 
 	var domainCountList []domain
