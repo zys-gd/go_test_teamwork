@@ -1,13 +1,10 @@
-package main
+package customerimporter
 
 import (
 	"io"
 	"os"
-	"os/exec"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestEmailString(t *testing.T) {
@@ -53,22 +50,7 @@ func TestEmailDomainWithInvalidEmail(t *testing.T) {
 	}
 }
 
-func TestMainUsageMessage(t *testing.T) {
-	if os.Getenv("FLAG") == "1" {
-		main()
-		return
-	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestMainUsageMessage")
-	cmd.Env = append(os.Environ(), "FLAG=1")
-	err := cmd.Run()
-
-	e, ok := err.(*exec.ExitError)
-	expectedErrorString := "exit status 1"
-	assert.Equal(t, true, ok)
-	assert.Equal(t, expectedErrorString, e.Error())
-}
-
-func TestMain(t *testing.T) {
+func TestFromCsv(t *testing.T) {
 	content := []byte(`first_name,last_name,email,gender,ip_address
 	Mildred,Hernandez,test@example.com,Female,38.194.51.128`)
 	tmpfile, err := os.CreateTemp("", "example.csv")
@@ -88,8 +70,7 @@ func TestMain(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	os.Args = []string{"cmd", tmpfile.Name()}
-	main()
+	FromCsv(tmpfile.Name())
 
 	w.Close()
 	os.Stdout = oldStdout

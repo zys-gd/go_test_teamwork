@@ -1,4 +1,4 @@
-package main
+package customerimporter
 
 import (
 	"encoding/csv"
@@ -22,14 +22,10 @@ func (e email) String() string {
 	return string(e)
 }
 
-func (e email) isValid() bool {
-	regex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
-	match, err := regexp.MatchString(regex, e.String())
-	if err != nil {
-		return false
-	}
+var emailPattern = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
-	return match
+func (e email) isValid() bool {
+	return emailPattern.MatchString(e.String())
 }
 
 func (e email) domain() string {
@@ -41,17 +37,11 @@ func (e email) domain() string {
 	return "*invalid"
 }
 
-func main() {
-	if len(os.Args) != 2 {
-		fmt.Println("Usage: go run main.go <csv_file>")
-		os.Exit(1)
-	}
-
-	filePath := os.Args[1]
-
-	file, err := os.Open(filePath)
+func FromCsv(csvpath string) {
+	file, err := os.Open(csvpath)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Cannot opent the file")
+		return
 	}
 	defer file.Close()
 
@@ -75,7 +65,7 @@ func main() {
 		domainCounts[email(record[2]).domain()]++
 	}
 
-	var domainCountList []domain
+	domainCountList := make([]domain, 0, len(domainCounts))
 	for d, count := range domainCounts {
 		domainCountList = append(domainCountList, domain{d, count})
 	}
